@@ -15,5 +15,10 @@
   "bugs": {
     "url": "https://github.com/kanselarij-vlaanderen/user-management-service/issues"
   },
-  "homepage": "https://github.com/kanselarij-vlaanderen/user-management-service#readme"
+  "homepage": "https://github.com/kanselarij-vlaanderen/user-management-service#readme",
+  "dependencies": {
+    "csv-parse": "^4.4.5",
+    "multiparty": "^4.2.1",
+    "stream-transform": "^2.0.1"
+  }
 }
