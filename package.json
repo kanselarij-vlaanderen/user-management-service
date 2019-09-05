@@ -1,0 +1,19 @@
+{
+  "name": "user-management-service",
+  "version": "1.0.0",
+  "description": "This management will handle imports of users with their properties.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kanselarij-vlaanderen/user-management-service.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kanselarij-vlaanderen/user-management-service/issues"
+  },
+  "homepage": "https://github.com/kanselarij-vlaanderen/user-management-service#readme"
+}
