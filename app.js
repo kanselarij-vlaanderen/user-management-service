@@ -8,8 +8,9 @@ const app = mu.app;
 
 app.post('/import-users', async (req, res) => {
   const formData = await formDataParser.parseFormData(req);
+
   if (!formData || !formData.file) {
-    throw new Error('No file uploaded');
+    res.send({ status: 400, body: { error: 'No file uploaded' } });
   }
 
   const file = formData.file;
@@ -22,8 +23,10 @@ app.post('/import-users', async (req, res) => {
       if (foundGroup) {
         const groupUri = foundGroup.group;
         const roleObject = reducedRoles[role];
-        roleObject.groupUri = groupUri;
-        return userHelpers.ensureUserAndAccount(roleObject);
+				return await Promise.all(roleObject.usersToAdd.map(async (user)=> {
+					user.groupUri = groupUri;
+					return userHelpers.ensureUserAndAccount(user);
+				}))
       }
     })
   );

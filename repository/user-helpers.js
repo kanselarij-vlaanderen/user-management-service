@@ -1,5 +1,10 @@
-import { uuid, sparqlEscapeUri, sparqlEscapeString, sparqlEscapeDateTime } from 'mu';
-import { querySudo as query, updateSudo as update } from './auth-sudo';
+import { uuid, sparqlEscapeUri, sparqlEscapeString, sparqlEscapeDateTime,  query, update } from 'mu';
+
+const serviceHomepage = 'https://github.com/lblod/acmidm-login-service';
+const resourceBaseUri = process.env.MU_APPLICATION_RESOURCE_BASE_URI || 'http://data.lblod.info/';
+const personResourceBaseUri = `${resourceBaseUri}id/persoon/`;
+const accountResourceBaseUri = `${resourceBaseUri}id/account/`;
+const identifierResourceBaseUri = `${resourceBaseUri}id/identificator/`;
 
 const getGroupsByLabel = async (label) => {
   const graph = `http://mu.semte.ch/graphs/public`;
@@ -23,29 +28,27 @@ const ensureUserAndAccount = async function(claims) {
 };
 
 const ensureUser = async function(claims, graph) {
-  const userId = claims['user-id'];
+  // const queryResult = await query(`
+  //   PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+  //   PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+  //   PREFIX adms: <http://www.w3.org/ns/adms#>
+  //   PREFIX dcterms: <http://purl.org/dc/terms/>
 
-  const queryResult = await query(`
-    PREFIX foaf: <http://xmlns.com/foaf/0.1/>
-    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-    PREFIX adms: <http://www.w3.org/ns/adms#>
-    PREFIX dcterms: <http://purl.org/dc/terms/>
+  //   SELECT ?person ?personId
+  //   FROM <${graph}> {
+  //     ?person a foaf:Person ;
+  //           mu:uuid ?personId ;
+  //           adms:identifier ?identifier .
+  //     ?identifier skos:notation ${sparqlEscapeString(claims.userId || '')} .
+  //   }`);
 
-    SELECT ?person ?personId
-    FROM <${graph}> {
-      ?person a foaf:Person ;
-            mu:uuid ?personId ;
-            adms:identifier ?identifier .
-      ?identifier skos:notation ${sparqlEscapeString(userId)} .
-    }`);
-
-  if (queryResult.results.bindings.length) {
-    const result = queryResult.results.bindings[0];
-    return { personUri: result.person.value, personId: result.personId.value };
-  } else {
+  // if (queryResult.results.bindings.length) {
+  //   const result = queryResult.results.bindings[0];
+  //   return { personUri: result.person.value, personId: result.personId.value };
+  // } else {
     const { personUri, personId } = await insertNewUser(claims, graph);
     return { personUri, personId };
-  }
+  // }
 };
 
 const insertNewUser = async function(claims, graph) {
@@ -68,17 +71,17 @@ const insertNewUser = async function(claims, graph) {
         <${claims.groupUri}> foaf:member ${sparqlEscapeUri(person)} .
         ${sparqlEscapeUri(identifier)} a adms:Identifier ;
                                        mu:uuid ${sparqlEscapeString(identifierId)} ;
-                                       skos:notation ${sparqlEscapeString(claims['user-id'])} .
+                                       skos:notation ${sparqlEscapeString(claims.userId || '')} .
     `;
 
   if (claims.firstName)
     insertData += `${sparqlEscapeUri(person)} foaf:firstName ${sparqlEscapeString(
-      claims.given_name
+      claims.firstName
     )} . \n`;
 
   if (claims.lastName)
     insertData += `${sparqlEscapeUri(person)} foaf:familyName ${sparqlEscapeString(
-      claims.family_name
+      claims.lastName
     )} . \n`;
 
   insertData += `
@@ -92,28 +95,28 @@ const insertNewUser = async function(claims, graph) {
 };
 
 const ensureAccountForUser = async function(personUri, claims, graph) {
-  const accountId = claims[accountIdClaim];
+  // const accountId = claims.accountIdClaim || '';
 
-  const queryResult = await query(`
-    PREFIX foaf: <http://xmlns.com/foaf/0.1/>
-    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-    PREFIX dcterms: <http://purl.org/dc/terms/>
+  // const queryResult = await query(`
+  //   PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+  //   PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+  //   PREFIX dcterms: <http://purl.org/dc/terms/>
 
-    SELECT ?account ?accountId
-    FROM <${graph}> {
-      ${sparqlEscapeUri(personUri)} foaf:account ?account .
-      ?account a foaf:OnlineAccount ;
-               mu:uuid ?accountId ;
-               dcterms:identifier ${sparqlEscapeString(accountId)} .
-    }`);
+  //   SELECT ?account ?accountId
+  //   FROM <${graph}> {
+  //     ${sparqlEscapeUri(personUri)} foaf:account ?account .
+  //     ?account a foaf:OnlineAccount ;
+  //              mu:uuid ?accountId ;
+  //              dcterms:identifier ${sparqlEscapeString(accountId)} .
+  //   }`);
 
-  if (queryResult.results.bindings.length) {
-    const result = queryResult.results.bindings[0];
-    return { accountUri: result.account.value, accountId: result.accountId.value };
-  } else {
+  // if (queryResult.results.bindings.length) {
+  //   const result = queryResult.results.bindings[0];
+  //   return { accountUri: result.account.value, accountId: result.accountId.value };
+  // } else {
     const { accountUri, accountId } = await insertNewAccountForUser(personUri, claims, graph);
     return { accountUri, accountId };
-  }
+  // }
 };
 
 const insertNewAccountForUser = async function(person, claims, graph) {
@@ -133,7 +136,7 @@ const insertNewAccountForUser = async function(person, claims, graph) {
         ${sparqlEscapeUri(account)} a foaf:OnlineAccount ;
                                  mu:uuid ${sparqlEscapeString(accountId)} ;
                                  foaf:accountServiceHomepage ${sparqlEscapeUri(serviceHomepage)} ;
-                                 dcterms:identifier ${sparqlEscapeString(claims[accountIdClaim])} ;
+                                 dcterms:identifier ${sparqlEscapeString(claims.userId)} ;
                                  dcterms:created ${sparqlEscapeDateTime(now)} .
     `;
 
@@ -142,9 +145,9 @@ const insertNewAccountForUser = async function(person, claims, graph) {
       claims.vo_doelgroepcode
     )} . \n`;
 
-  if (claims.vo_doelgroepnaam)
+  if (claims.organisation)
     insertData += `${sparqlEscapeUri(account)} acmidm:doelgroepNaam ${sparqlEscapeString(
-      claims.vo_doelgroepnaam
+      claims.organisation
     )} . \n`;
 
   insertData += `
