@@ -1,0 +1,5 @@
+naam,voornaam,user-id,e-mailadres,organisatie,gebruikersrecht(te kiezen door alvin)
+Test-1,test-voornaam-1,1111,Test-1test-voornaam-1,Admin,admin
+Test-2,test-voornaam-2,1112,Test-1test-voornaam-1,test,test
+Test-3,test-voornaam-3,1113,Test-1test-voornaam-1,ministers,minister
+Test-4,test-voornaam-4,1114,Test-1test-voornaam-1,Kans,kanselarij
