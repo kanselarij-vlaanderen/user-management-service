@@ -61,13 +61,15 @@ const insertNewUser = async function(claims, graph) {
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX adms: <http://www.w3.org/ns/adms#>
+    PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 
     INSERT DATA {
       GRAPH <${graph}> {
         ${sparqlEscapeUri(person)} a foaf:Person ;
                                  mu:uuid ${sparqlEscapeString(personId)} ;
-                                 adms:identifier ${sparqlEscapeUri(identifier)} .
+                                 dcterms:identifier ${sparqlEscapeUri(identifier)} .
+
         <${claims.groupUri}> foaf:member ${sparqlEscapeUri(person)} .
         ${sparqlEscapeUri(identifier)} a adms:Identifier ;
                                        mu:uuid ${sparqlEscapeString(identifierId)} ;
