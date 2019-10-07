@@ -28,27 +28,27 @@ const ensureUserAndAccount = async function(claims) {
 };
 
 const ensureUser = async function(claims, graph) {
-  // const queryResult = await query(`
-  //   PREFIX foaf: <http://xmlns.com/foaf/0.1/>
-  //   PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-  //   PREFIX adms: <http://www.w3.org/ns/adms#>
-  //   PREFIX dcterms: <http://purl.org/dc/terms/>
+  const queryResult = await query(`
+    PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+    PREFIX adms: <http://www.w3.org/ns/adms#>
+    PREFIX dcterms: <http://purl.org/dc/terms/>
 
-  //   SELECT ?person ?personId
-  //   FROM <${graph}> {
-  //     ?person a foaf:Person ;
-  //           mu:uuid ?personId ;
-  //           adms:identifier ?identifier .
-  //     ?identifier skos:notation ${sparqlEscapeString(claims.userId || '')} .
-  //   }`);
+    SELECT ?person ?personId
+    FROM <${graph}> {
+      ?person a foaf:Person ;
+            mu:uuid ?personId ;
+            adms:identifier ?identifier .
+      ?identifier skos:notation ${sparqlEscapeString(claims.userId || '')} .
+    }`);
 
-  // if (queryResult.results.bindings.length) {
-  //   const result = queryResult.results.bindings[0];
-  //   return { personUri: result.person.value, personId: result.personId.value };
-  // } else {
+  if (queryResult.results.bindings.length) {
+    const result = queryResult.results.bindings[0];
+    return { personUri: result.person.value, personId: result.personId.value };
+  } else {
     const { personUri, personId } = await insertNewUser(claims, graph);
     return { personUri, personId };
-  // }
+  }
 };
 
 const insertNewUser = async function(claims, graph) {
@@ -97,28 +97,28 @@ const insertNewUser = async function(claims, graph) {
 };
 
 const ensureAccountForUser = async function(personUri, claims, graph) {
-  // const accountId = claims.accountIdClaim || '';
+  const accountId = claims.accountIdClaim || '';
 
-  // const queryResult = await query(`
-  //   PREFIX foaf: <http://xmlns.com/foaf/0.1/>
-  //   PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-  //   PREFIX dcterms: <http://purl.org/dc/terms/>
+  const queryResult = await query(`
+    PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+    PREFIX dcterms: <http://purl.org/dc/terms/>
 
-  //   SELECT ?account ?accountId
-  //   FROM <${graph}> {
-  //     ${sparqlEscapeUri(personUri)} foaf:account ?account .
-  //     ?account a foaf:OnlineAccount ;
-  //              mu:uuid ?accountId ;
-  //              dcterms:identifier ${sparqlEscapeString(accountId)} .
-  //   }`);
+    SELECT ?account ?accountId
+    FROM <${graph}> {
+      ${sparqlEscapeUri(personUri)} foaf:account ?account .
+      ?account a foaf:OnlineAccount ;
+               mu:uuid ?accountId ;
+               dcterms:identifier ${sparqlEscapeString(accountId)} .
+    }`);
 
-  // if (queryResult.results.bindings.length) {
-  //   const result = queryResult.results.bindings[0];
-  //   return { accountUri: result.account.value, accountId: result.accountId.value };
-  // } else {
+  if (queryResult.results.bindings.length) {
+    const result = queryResult.results.bindings[0];
+    return { accountUri: result.account.value, accountId: result.accountId.value };
+  } else {
     const { accountUri, accountId } = await insertNewAccountForUser(personUri, claims, graph);
     return { accountUri, accountId };
-  // }
+  }
 };
 
 const insertNewAccountForUser = async function(person, claims, graph) {
