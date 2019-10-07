@@ -4,7 +4,7 @@ const transform = require('stream-transform');
 
 // Incoming csv structure: lastName,firstName,user-id,email,organisation,rights
 const processCsvUsersFileFromPath = (path) => {
-  let parser = csvparse({ delimiter: ',', from: 2 });
+  let parser = csvparse({ delimiter: ';', from: 2 });
   let input = fs.createReadStream(path, 'utf8');
   let batch = [];
 
@@ -21,7 +21,7 @@ const processCsvUsersFileFromPath = (path) => {
     },
     { parallel: 10 }
   );
- 
+
   input.pipe(parser).pipe(users);
 
   return new Promise((resolve, reject) => {
