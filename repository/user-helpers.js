@@ -68,7 +68,7 @@ const insertNewUser = async function(claims, graph) {
       GRAPH <${graph}> {
         ${sparqlEscapeUri(person)} a foaf:Person ;
                                  mu:uuid ${sparqlEscapeString(personId)} ;
-                                 dcterms:identifier ${sparqlEscapeUri(identifier)} .
+                                 adms:identifier ${sparqlEscapeUri(identifier)} .
 
         <${claims.groupUri}> foaf:member ${sparqlEscapeUri(person)} .
         ${sparqlEscapeUri(identifier)} a adms:Identifier ;
@@ -103,13 +103,14 @@ const ensureAccountForUser = async function(personUri, claims, graph) {
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX adms: <http://www.w3.org/ns/adms#>
 
     SELECT ?account ?accountId
     FROM <${graph}> {
       ${sparqlEscapeUri(personUri)} foaf:account ?account .
       ?account a foaf:OnlineAccount ;
                mu:uuid ?accountId ;
-               dcterms:identifier ${sparqlEscapeString(accountId)} .
+               adms:identifier ${sparqlEscapeString(accountId)} .
     }`);
 
   if (queryResult.results.bindings.length) {
@@ -131,6 +132,7 @@ const insertNewAccountForUser = async function(person, claims, graph) {
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX acmidm: <http://mu.semte.ch/vocabularies/ext/acmidm/>
+    PREFIX adms: <http://www.w3.org/ns/adms#>
 
     INSERT DATA {
       GRAPH <${graph}> {
@@ -138,7 +140,7 @@ const insertNewAccountForUser = async function(person, claims, graph) {
         ${sparqlEscapeUri(account)} a foaf:OnlineAccount ;
                                  mu:uuid ${sparqlEscapeString(accountId)} ;
                                  foaf:accountServiceHomepage ${sparqlEscapeUri(serviceHomepage)} ;
-                                 dcterms:identifier ${sparqlEscapeString(claims.userId)} ;
+                                 adms:identifier ${sparqlEscapeString(claims.userId)} ;
                                  dcterms:created ${sparqlEscapeDateTime(now)} .
     `;
 

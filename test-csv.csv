@@ -1,5 +1,5 @@
-naam,voornaam,user-id,e-mailadres,organisatie,gebruikersrecht(te kiezen door alvin)
-Test-1,test-voornaam-1,919191,Test-1test-voornaam-1,Admin,admin
-Test-2,test-voornaam-2,919192,Test-1test-voornaam-1,test,test
-Test-3,test-voornaam-3,919193,Test-1test-voornaam-1,ministers,minister
-Test-4,test-voornaam-4,919194,Test-1test-voornaam-1,kans,kanselarij
+naam;voornaam;user-id;e-mailadres;organisatie;gebruikersrecht(te kiezen door alvin)
+Test-1;test-voornaam-1;1;test1@test.be;admin;admin
+Test-2;test-voornaam-2;2;test2@test.be;test;test
+Test-3;test-voornaam-3;3;test3@test.be;minister;minister
+Test-4;test-voornaam-4;4;test4@test.be;kanselarij;kanselarij
