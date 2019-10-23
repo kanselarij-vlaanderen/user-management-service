@@ -1,7 +1,7 @@
 import { uuid, sparqlEscapeUri, sparqlEscapeString, sparqlEscapeDateTime,  query, update } from 'mu';
 
 const serviceHomepage = 'https://github.com/lblod/acmidm-login-service';
-const resourceBaseUri = process.env.MU_APPLICATION_RESOURCE_BASE_URI || 'http://data.lblod.info/';
+const resourceBaseUri = process.env.MU_APPLICATION_RESOURCE_BASE_URI ;
 const personResourceBaseUri = `${resourceBaseUri}id/persoon/`;
 const accountResourceBaseUri = `${resourceBaseUri}id/account/`;
 const identifierResourceBaseUri = `${resourceBaseUri}id/identificator/`;

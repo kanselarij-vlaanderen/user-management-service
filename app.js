@@ -4,6 +4,10 @@ const formDataParser = require('./repository/parse-form-data.js');
 const csvParser = require('./repository/index.js');
 const userHelpers = require('./repository/user-helpers.js');
 
+if (!process.env.MU_APPLICATION_RESOURCE_BASE_URI) {
+  throw new Error("MU_APPLICATION_RESOURCE_BASE_URI not set!")
+}
+
 const app = mu.app;
 
 app.post('/import-users', async (req, res) => {
