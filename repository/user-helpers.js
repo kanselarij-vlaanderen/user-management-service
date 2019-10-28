@@ -35,7 +35,7 @@ const ensureUser = async function(claims, graph) {
     PREFIX dcterms: <http://purl.org/dc/terms/>
 
     SELECT ?person ?personId
-    FROM <${graph}> {
+    FROM <${graph}> WHERE {
       ?person a foaf:Person ;
             mu:uuid ?personId ;
             adms:identifier ?identifier .
@@ -61,7 +61,6 @@ const insertNewUser = async function(claims, graph) {
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX adms: <http://www.w3.org/ns/adms#>
-    PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 
     INSERT DATA {
@@ -79,12 +78,12 @@ const insertNewUser = async function(claims, graph) {
   if (claims.firstName)
     insertData += `${sparqlEscapeUri(person)} foaf:firstName ${sparqlEscapeString(
       claims.firstName
-    )} . \n`;
+    )} . `;
 
   if (claims.lastName)
     insertData += `${sparqlEscapeUri(person)} foaf:familyName ${sparqlEscapeString(
       claims.lastName
-    )} . \n`;
+    )} . `;
 
   insertData += `
       }
@@ -97,20 +96,19 @@ const insertNewUser = async function(claims, graph) {
 };
 
 const ensureAccountForUser = async function(personUri, claims, graph) {
-  const accountId = claims.accountIdClaim || '';
+  const accountId = claims.userId || '';
 
   const queryResult = await query(`
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX dcterms: <http://purl.org/dc/terms/>
-    PREFIX adms: <http://www.w3.org/ns/adms#>
 
     SELECT ?account ?accountId
-    FROM <${graph}> {
+    FROM <${graph}> WHERE {
       ${sparqlEscapeUri(personUri)} foaf:account ?account .
       ?account a foaf:OnlineAccount ;
                mu:uuid ?accountId ;
-               adms:identifier ${sparqlEscapeString(accountId)} .
+               dcterms:identifier ${sparqlEscapeString(accountId)} .
     }`);
 
   if (queryResult.results.bindings.length) {
@@ -132,7 +130,6 @@ const insertNewAccountForUser = async function(person, claims, graph) {
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX acmidm: <http://mu.semte.ch/vocabularies/ext/acmidm/>
-    PREFIX adms: <http://www.w3.org/ns/adms#>
 
     INSERT DATA {
       GRAPH <${graph}> {
@@ -140,19 +137,19 @@ const insertNewAccountForUser = async function(person, claims, graph) {
         ${sparqlEscapeUri(account)} a foaf:OnlineAccount ;
                                  mu:uuid ${sparqlEscapeString(accountId)} ;
                                  foaf:accountServiceHomepage ${sparqlEscapeUri(serviceHomepage)} ;
-                                 adms:identifier ${sparqlEscapeString(claims.userId)} ;
+                                 dcterms:identifier ${sparqlEscapeString(claims.userId)} ;
                                  dcterms:created ${sparqlEscapeDateTime(now)} .
     `;
 
   if (claims.vo_doelgroepcode)
     insertData += `${sparqlEscapeUri(account)} acmidm:doelgroepCode ${sparqlEscapeString(
       claims.vo_doelgroepcode
-    )} . \n`;
+    )} . `;
 
   if (claims.organisation)
     insertData += `${sparqlEscapeUri(account)} acmidm:doelgroepNaam ${sparqlEscapeString(
       claims.organisation
-    )} . \n`;
+    )} . `;
 
   insertData += `
       }
