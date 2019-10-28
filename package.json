@@ -1,6 +1,6 @@
 {
   "name": "user-management-service",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "This management will handle imports of users with their properties.",
   "main": "app.js",
   "scripts": {
