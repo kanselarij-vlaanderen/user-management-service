@@ -44,10 +44,11 @@ const ensureUser = async function(claims, graph) {
 
   if (queryResult.results.bindings.length) {
     const result = queryResult.results.bindings[0];
-    return { personUri: result.person.value, personId: result.personId.value };
+    await updateGroupForUser(personUri, claims, graph);
+    return { personUri: result.person.value };
   } else {
-    const { personUri, personId } = await insertNewUser(claims, graph);
-    return { personUri, personId };
+    const { personUri } = await insertNewUser(claims, graph);
+    return { personUri };
   }
 };
 
@@ -92,7 +93,7 @@ const insertNewUser = async function(claims, graph) {
 
   await update(insertData);
 
-  return { personUri: person, personId: personId };
+  return { personUri: person};
 };
 
 const ensureAccountForUser = async function(personUri, claims, graph) {
@@ -174,6 +175,40 @@ const parseSparqlResults = (data) => {
     return obj;
   });
 };
+
+const updateGroupForUser = async function(personUri, claims, graph) {
+
+let deleteData = `
+  PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+  PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+
+  DELETE {
+    GRAPH <${graph}> {
+      ?group foaf:member ${sparqlEscapeUri(personUri)} .       
+    } 
+  }
+  WHERE {
+    GRAPH <${graph}> {
+      ?group a foaf:Group ;
+            foaf:member ${sparqlEscapeUri(personUri)} .
+    }
+  }
+`;
+
+let insertData = `
+  PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+  PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+  INSERT DATA {
+    GRAPH <${graph}> {
+      <${claims.groupUri}> foaf:member ${sparqlEscapeUri(personUri)} .  
+    } 
+  }
+`;
+
+await update(deleteData); // TODO try catch ?
+await update(insertData);
+
+}
 
 module.exports = {
   getGroupsByLabel,
