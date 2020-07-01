@@ -8,7 +8,6 @@ const identifierResourceBaseUri = `${resourceBaseUri}id/identificator/`;
 
 const getGroupsByLabel = async (label) => {
   const queryString = `
-    PREFIX org: <http://www.w3.org/ns/org#>
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 
 		SELECT ?group WHERE {
@@ -20,38 +19,38 @@ const getGroupsByLabel = async (label) => {
   return parseSparqlResults(data);
 };
 
-const ensureUserAndAccount = async function(claims) {
-  const { personUri } = await ensureUser(claims);
-  const { accountUri, accountId } = await ensureAccountForUser(personUri, claims);
+const ensureUserAndAccount = async function(user) {
+  const { personUri } = await ensureUser(user);
+  const { accountUri, accountId } = await ensureAccountForUser(personUri, user);
   return { accountUri, accountId };
 };
 
-const ensureUser = async function(claims) {
+const ensureUser = async function(user) {
   const queryResult = await query(`
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX adms: <http://www.w3.org/ns/adms#>
-    PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 
     SELECT ?person ?personId WHERE {
       ?person a foaf:Person ;
             mu:uuid ?personId ;
             adms:identifier ?identifier .
-      ?identifier skos:notation ${sparqlEscapeString(claims.userId || '')} .
+      ?identifier skos:notation ${sparqlEscapeString(user.userId || '')} .
     }`);
 
   if (queryResult.results.bindings.length) {
     const result = queryResult.results.bindings[0];
     const foundPersonUri = result.person.value;
-    await updateGroupForUser(foundPersonUri, claims);
+    await updateGroupForUser(foundPersonUri, user);
     return { personUri: foundPersonUri };
   } else {
-    const { personUri } = await insertNewUser(claims);
+    const { personUri } = await insertNewUser(user);
     return { personUri };
   }
 };
 
-const insertNewUser = async function(claims) {
+const insertNewUser = async function(user) {
   const personId = uuid();
   const person = `${personResourceBaseUri}${personId}`;
   const identifierId = uuid();
@@ -68,20 +67,20 @@ const insertNewUser = async function(claims) {
                                 mu:uuid ${sparqlEscapeString(personId)} ;
                                 adms:identifier ${sparqlEscapeUri(identifier)} .
 
-      <${claims.groupUri}> foaf:member ${sparqlEscapeUri(person)} .
+      <${user.groupUri}> foaf:member ${sparqlEscapeUri(person)} .
       ${sparqlEscapeUri(identifier)} a adms:Identifier ;
                                       mu:uuid ${sparqlEscapeString(identifierId)} ;
-                                      skos:notation ${sparqlEscapeString(claims.userId || '')} .
+                                      skos:notation ${sparqlEscapeString(user.userId || '')} .
     `;
 
-  if (claims.firstName)
+  if (user.firstName)
     insertData += `${sparqlEscapeUri(person)} foaf:firstName ${sparqlEscapeString(
-      claims.firstName
+      user.firstName
     )} . `;
 
-  if (claims.lastName)
+  if (user.lastName)
     insertData += `${sparqlEscapeUri(person)} foaf:familyName ${sparqlEscapeString(
-      claims.lastName
+      user.lastName
     )} . `;
 
   insertData += `
@@ -94,8 +93,8 @@ const insertNewUser = async function(claims) {
   return { personUri: person};
 };
 
-const ensureAccountForUser = async function(personUri, claims) {
-  const accountId = claims.userId || '';
+const ensureAccountForUser = async function(personUri, user) {
+  const accountId = user.userId || '';
 
   const queryResult = await query(`
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
@@ -113,12 +112,12 @@ const ensureAccountForUser = async function(personUri, claims) {
     const result = queryResult.results.bindings[0];
     return { accountUri: result.account.value, accountId: result.accountId.value };
   } else {
-    const { accountUri, accountId } = await insertNewAccountForUser(personUri, claims);
+    const { accountUri, accountId } = await insertNewAccountForUser(personUri, user);
     return { accountUri, accountId };
   }
 };
 
-const insertNewAccountForUser = async function(person, claims) {
+const insertNewAccountForUser = async function(person, user) {
   const accountId = uuid();
   const account = `${accountResourceBaseUri}${accountId}`;
   const now = new Date();
@@ -134,18 +133,18 @@ const insertNewAccountForUser = async function(person, claims) {
       ${sparqlEscapeUri(account)} a foaf:OnlineAccount ;
                                 mu:uuid ${sparqlEscapeString(accountId)} ;
                                 foaf:accountServiceHomepage ${sparqlEscapeUri(serviceHomepage)} ;
-                                dcterms:identifier ${sparqlEscapeString(claims.userId)} ;
+                                dcterms:identifier ${sparqlEscapeString(user.userId)} ;
                                 dcterms:created ${sparqlEscapeDateTime(now)} .
     `;
 
-  if (claims.vo_doelgroepcode)
+  if (user.vo_doelgroepcode)
     insertData += `${sparqlEscapeUri(account)} acmidm:doelgroepCode ${sparqlEscapeString(
-      claims.vo_doelgroepcode
+      user.vo_doelgroepcode
     )} . `;
 
-  if (claims.organisation)
+  if (user.organisation)
     insertData += `${sparqlEscapeUri(account)} acmidm:doelgroepNaam ${sparqlEscapeString(
-      claims.organisation
+      user.organisation
     )} . `;
 
   insertData += `
@@ -171,17 +170,16 @@ const parseSparqlResults = (data) => {
   });
 };
 
-const updateGroupForUser = async function(personUri, claims) {
+const updateGroupForUser = async function(personUri, user) {
 
 let updateData = `
   PREFIX foaf: <http://xmlns.com/foaf/0.1/>
-  PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 
   DELETE {
     ?group foaf:member ${sparqlEscapeUri(personUri)} .       
   }
   INSERT {
-    <${claims.groupUri}> foaf:member ${sparqlEscapeUri(personUri)} .  
+    <${user.groupUri}> foaf:member ${sparqlEscapeUri(personUri)} .  
   }
   WHERE {
     ?group a foaf:Group ;
